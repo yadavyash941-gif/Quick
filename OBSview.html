@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Live Cricket Score Overlay</title>
+    <style>
+        /* स्कोरबोर्ड को सुंदर बनाने के लिए CSS */
+        body { margin: 0; background: transparent; overflow: hidden; }
+        #scoreboard {
+            position: absolute;
+            bottom: 0; /* स्क्रीन के नीचे रखें */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 500px;
+            background: rgba(0, 0, 0, 0.75); /* काला पारदर्शी बैकग्राउंड */
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Arial Black', sans-serif;
+        }
+        .score-box { font-size: 48px; font-weight: bold; }
+        .info-box { font-size: 18px; text-align: right; }
+        .overs { font-size: 24px; color: #ffcc00; }
+        .team-name { font-size: 20px; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <div id="scoreboard">
+        <div>
+            <div class="team-name" id="teamName">INDIA</div>
+            <div class="score-box" id="liveScore">0/0</div>
+        </div>
+        <div class="info-box">
+            <div class="overs" id="liveOvers">0.0 Ov</div>
+            <div id="status">Batting</div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+    <script>
+        // **!!! यहां अपनी Firebase कॉन्फ़िगरेशन पेस्ट करें !!!**
+       const firebaseConfig = {
+         apiKey: "AIzaSyCbeKfigcLxiywajpkS9wy5pM3ufHO32QE",
+         authDomain: "quick-scorer.firebaseapp.com",
+         databaseURL: "https://quick-scorer-default-rtdb.firebaseio.com",
+         projectId: "quick-scorer",
+         storageBucket: "quick-scorer.firebasestorage.app",
+         messagingSenderId: "756446135459",
+        appId: "1:756446135459:web:0d5be91802ec23faba2b16",
+        measurementId: "G-NMTWZ2LKSZ"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const scoreRef = db.ref('matchData/teamA'); // वही रेफरेंस जो Scorer Console में है
+
+        // Realtime डेटा सुनना
+        scoreRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                const balls = data.balls || 0;
+                const overs = data.overs || 0;
+                
+                document.getElementById('liveScore').innerText = `${data.score || 0}/${data.wickets || 0}`;
+                document.getElementById('liveOvers').innerText = `${overs}.${balls} Ov`;
+            }
+        });
+    </script>
+</body>
+</html>

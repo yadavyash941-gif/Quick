@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Score Updater Console</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .controls button { padding: 10px 15px; margin: 5px; font-size: 16px; cursor: pointer; }
+        .current-score { margin-top: 20px; font-size: 24px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Score Update Console</h1>
+    <div class="current-score" id="currentScore">Loading...</div>
+    
+    <h2>Runs</h2>
+    <div class="controls">
+        <button onclick="updateScore(1)">1 Run</button>
+        <button onclick="updateScore(2)">2 Runs</button>
+        <button onclick="updateScore(4)">4 Runs</button>
+        <button onclick="updateScore(6)">6 Runs</button>
+        <button onclick="resetScore()">Reset Score</button>
+    </div>
+
+    <h2>Wickets / Overs</h2>
+    <div class="controls">
+        <button onclick="addWicket()">Wicket</button>
+        <button onclick="addBall()">Add Ball</button>
+        <button onclick="undoLast()">UNDO</button>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+    <script>
+        // **!!! यहां अपनी Firebase कॉन्फ़िगरेशन पेस्ट करें !!!**
+        const firebaseConfig = {
+  apiKey: "AIzaSyCbeKfigcLxiywajpkS9wy5pM3ufHO32QE",
+  authDomain: "quick-scorer.firebaseapp.com",
+  databaseURL: "https://quick-scorer-default-rtdb.firebaseio.com",
+  projectId: "quick-scorer",
+  storageBucket: "quick-scorer.firebasestorage.app",
+  messagingSenderId: "756446135459",
+  appId: "1:756446135459:web:0d5be91802ec23faba2b16",
+  measurementId: "G-NMTWZ2LKSZ"
+};
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const scoreRef = db.ref('matchData/teamA'); // यह वह जगह है जहां डेटा स्टोर होगा
+
+        let currentScoreData = { score: 0, wickets: 0, overs: 0, balls: 0 };
+
+        // 1. Firebase से डेटा पढ़ना (Display current status)
+        scoreRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                currentScoreData = data;
+                document.getElementById('currentScore').innerText = 
+                    `${data.score}/${data.wickets} (${data.overs}.${data.balls} Ov)`;
+            }
+        });
+
+        // 2. स्कोर अपडेट फंक्शन
+        function updateScore(runs) {
+            currentScoreData.score += runs;
+            currentScoreData.balls += 1; // हर लीगल रन पर बॉल काउंट होगी
+            updateFirebase();
+        }
+
+        // 3. विकेट फंक्शन
+        function addWicket() {
+            currentScoreData.wickets += 1;
+            currentScoreData.balls += 1;
+            updateFirebase();
+        }
+
+        // 4. बॉल फंक्शन (यदि रन नहीं लिया गया)
+        function addBall() {
+             currentScoreData.balls += 1;
+             updateFirebase();
+        }
+        
+        // 5. ओवर/बॉल लॉजिक
+        function updateFirebase() {
+            if (currentScoreData.balls >= 6) {
+                currentScoreData.overs += 1;
+                currentScoreData.balls = 0;
+            }
+            // Realtime Database में डेटा सेट करें
+            scoreRef.set(currentScoreData);
+        }
+
+        // 6. रीसेट फंक्शन
+        function resetScore() {
+            scoreRef.set({ score: 0, wickets: 0, overs: 0, balls: 0 });
+        }
+        
+        // UNDO फंक्शन (इसे और जटिल बनाने की आवश्यकता हो सकती है, यहाँ एक सरल उदाहरण है)
+        function undoLast() {
+             alert('Undo फीचर जटिल है। इसे मैन्युअल रूप से रीसेट करें या डेटाबेस में सही मान दर्ज करें।');
+        }
+    </script>
+</body>
+</html>
